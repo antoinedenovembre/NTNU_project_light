@@ -9,3 +9,6 @@
 
 # Image outputs
 output/images/
+
+# Input data
+data/

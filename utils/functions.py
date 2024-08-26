@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import albumentations as A
 
 # Custom files
+from utils.constants import *
 from utils.logger import _app_logger
 
 # ==================================================== FUNCTIONS ====================================================
@@ -224,7 +225,7 @@ def compare_bboxes_for_image(
     draw_bboxes_fn(ax2, predicted_bboxes, predicted_class_confidences)
 
     # Ensure the results directory exists
-    results_path_img = Path("results/images/")
+    results_path_img = IMG_DIR
     results_path_img.mkdir(parents=True, exist_ok=True)
 
     # Save the image with a unique filename
