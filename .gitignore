@@ -1,0 +1,11 @@
+# Mac files
+.DS_Store
+
+# Cache files
+*cache*
+
+# Logs
+*.log
+
+# Image outputs
+output/images/
