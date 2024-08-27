@@ -21,7 +21,7 @@ class EfficientDetModel(LightningModule):
         self,
         num_classes=1,
         img_size=IMG_SIZE[0],
-        prediction_confidence_threshold=0.2,
+        prediction_confidence_threshold=CONFIDENCE_THRESHOLD,
         learning_rate=0.0002,
         iou_threshold=0.44,
         sigma=0.5,

@@ -84,14 +84,14 @@ def train_efficient_det(num_sanity_val_steps=1):
         img_size=IMG_SIZE[0],
         model_architecture=ARCHITECTURE,
         iou_threshold=0.44,
-        prediction_confidence_threshold=0.2,
+        prediction_confidence_threshold=CONFIDENCE_THRESHOLD,
         sigma=0.8,
         learning_rate=0.003
     )
     _app_logger.info("Model creation complete.")
 
     # Trainer setup
-    _app_logger.info(f"Starting training for {EPOCHS} epochs...")
+    _app_logger.info(f"Starting training for {EPOCHS} epochs... (Early stopping enabled)")
     logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
     trainer = Trainer(
         logger=_lightning_logger,
@@ -136,7 +136,7 @@ def validate_efficient_det(num_sanity_val_steps=1):
         img_size=IMG_SIZE[0],
         model_architecture=ARCHITECTURE,
         iou_threshold=0.8,
-        prediction_confidence_threshold=0.2,
+        prediction_confidence_threshold=CONFIDENCE_THRESHOLD,
         sigma=0.8,
     )
 
