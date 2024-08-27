@@ -1,10 +1,12 @@
 # NTNU EfficientDet training
 
-![NorsvinLogo](https://www.facebook.com/NorsvinSA/)
+<p align="center">
+    <img src="documentation/logo.png" width="30%" />
+</p>
+
+## Introduction
 
 Deep learning project about animal behaviour.
-
----
 
 ## Features
 
@@ -13,15 +15,11 @@ For now, the project includes:
 - EfficientDet model training and saving
 - EfficientDet evaluation (including metrics and image testing)
 
----
-
 ## Prerequisites
 
 Before you begin, ensure you have met the following requirements:
 
 - Python 3.10+
-
----
 
 ## Installation
 
@@ -64,8 +62,6 @@ NTNU_project_light
 └───scripts
 ```
 
----
-
 ## Usage
 
 Here is the command to run the project:
@@ -74,11 +70,9 @@ Here is the command to run the project:
 python main.py
 ```
 
----
-
 ## Documentation
 
-[Documentation](documentation/paper.pdf)
+[Documentation - Paper by Fayaz Rahman](documentation/paper.pdf)
 
 ## Q&As
 
@@ -89,8 +83,6 @@ python main.py
 ### What OS can be used?
 
 - Any Linux distro should do the trick, but I recommend using Ubuntu 22.04+
-
----
 
 ## Contributing
 
