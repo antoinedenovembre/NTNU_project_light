@@ -143,43 +143,6 @@ def validate_efficient_det(num_sanity_val_steps=1):
     model.load_state_dict(torch.load(MODEL_FULL_PATH, weights_only=True))
     model.eval()
 
-    # Set the indices of images you want to validate
-    # number_of_images = len(pigs_val_ds)
-
-    # for idx in range(number_of_images):
-    #     image, truth_bboxes, _, _ = pigs_val_ds.get_image_and_labels_by_idx(idx)
-    #     images = [image]
-        
-    #     # Get predictions
-    #     (
-    #         predicted_bboxes,
-    #         predicted_class_confidences,
-    #         predicted_class_labels,
-    #     ) = model.predict(images)
-        
-    #     # Compare predicted bounding boxes with the ground truth
-    #     compare_bboxes_for_image(
-    #         image,
-    #         predicted_bboxes=predicted_bboxes[0],
-    #         predicted_class_confidences=None,
-    #         actual_bboxes=truth_bboxes.tolist(),
-    #     )
-
-    # image1, truth_bboxes1, _, _ = pigs_val_ds.get_image_and_labels_by_idx(209)
-    # images = [image1]
-    # (
-    #     predicted_bboxes,
-    #     predicted_class_confidences,
-    #     predicted_class_labels,
-    # ) = model.predict(images)
-    
-    # compare_bboxes_for_image(
-    #     image1,
-    #     predicted_bboxes=predicted_bboxes[0],
-    #     predicted_class_confidences=None,
-    #     actual_bboxes=truth_bboxes1.tolist(),
-    # )
-
     all_truths = []
     all_predictions = []
 
@@ -199,6 +162,7 @@ def validate_efficient_det(num_sanity_val_steps=1):
                 image_id=i
         )
 
+    # This trainer is only used for validation
     logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
     trainer = Trainer(
         logger=_lightning_logger,

@@ -11,6 +11,7 @@ import torch
 
 # Custom files
 from utils.functions import *
+from utils.constants import *
 from utils.logger import _app_logger
 
 # ===================================== CLASS ===================================== #
@@ -19,12 +20,12 @@ class EfficientDetModel(LightningModule):
     def __init__(
         self,
         num_classes=1,
-        img_size=img_size[0],
+        img_size=IMG_SIZE[0],
         prediction_confidence_threshold=0.2,
         learning_rate=0.0002,
         iou_threshold=0.44,
         sigma=0.5,
-        inference_transforms=get_valid_transforms(target_img_size=img_size[0]),
+        inference_transforms=get_valid_transforms(target_img_size=IMG_SIZE[0]),
         model_architecture="tf_efficientnetv2_l",
     ):
         super().__init__()
@@ -43,26 +44,15 @@ class EfficientDetModel(LightningModule):
         return self.model(images, targets)
 
     def configure_optimizers(self):
-        # optimizer = torch.optim.SGD(
-        #     self.model.parameters(),
-        #     lr=self.lr,
-        #     momentum=0.9,
-        #     weight_decay=4e-5,
-        #     nesterov=True,
-        # )
-        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        #     optimizer, T_max=5, eta_min=0.001, verbose=True
-        # )
-        # return [optimizer], [scheduler]
         return torch.optim.AdamW(self.model.parameters(), lr=self.lr)
 
     def training_step(self, batch, batch_idx):
         images, annotations, _, image_ids = batch
         losses = self.model(images, annotations)
 
-        self.log("train_loss", losses["loss"], on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        self.log("train_class_loss", losses["class_loss"], on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        self.log("train_box_loss", losses["box_loss"], on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        # self.log("train_loss", losses["loss"], on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        # self.log("train_class_loss", losses["class_loss"], on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        # self.log("train_box_loss", losses["box_loss"], on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         return losses["loss"]
 
@@ -84,34 +74,35 @@ class EfficientDetModel(LightningModule):
             "box_loss": outputs["box_loss"].detach(),
         }
 
-        self.log(
-            "valid_loss",
-            outputs["loss"],
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-            logger=True,
-            sync_dist=True,
-        )
-        self.log(
-            "valid_class_loss",
-            logging_losses["class_loss"],
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-            logger=True,
-            sync_dist=True,
-        )
-        self.log(
-            "valid_box_loss",
-            logging_losses["box_loss"],
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-            logger=True,
-            sync_dist=True,
-        )
-       # Append the loss and batch predictions for aggregation
+        # self.log(
+        #     "valid_loss",
+        #     outputs["loss"],
+        #     on_step=True,
+        #     on_epoch=True,
+        #     prog_bar=True,
+        #     logger=True,
+        #     sync_dist=True,
+        # )
+        # self.log(
+        #     "valid_class_loss",
+        #     logging_losses["class_loss"],
+        #     on_step=True,
+        #     on_epoch=True,
+        #     prog_bar=True,
+        #     logger=True,
+        #     sync_dist=True,
+        # )
+        # self.log(
+        #     "valid_box_loss",
+        #     logging_losses["box_loss"],
+        #     on_step=True,
+        #     on_epoch=True,
+        #     prog_bar=True,
+        #     logger=True,
+        #     sync_dist=True,
+        # )
+
+        # Append the loss and batch predictions for aggregation
         self.validation_step_outputs.append({
                       "loss": torch.tensor(outputs["loss"]) if not isinstance(outputs["loss"], torch.Tensor) else outputs["loss"],
                       "batch_predictions": batch_predictions
@@ -129,6 +120,8 @@ class EfficientDetModel(LightningModule):
         Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
 
         """
+        _app_logger.info("Predicting from List of PIL Images")
+
         image_sizes = [(image.size[1], image.size[0]) for image in images]
         images_tensor = torch.stack(
             [
@@ -153,6 +146,8 @@ class EfficientDetModel(LightningModule):
         Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
 
         """
+        _app_logger.info("Predicting from Numpy Multidimensional Array")
+
         if images_tensor.ndim == 3:
             images_tensor = images_tensor[np.newaxis, :]
 
@@ -178,6 +173,9 @@ class EfficientDetModel(LightningModule):
             images_tensor: the images tensor returned from the dataloader
         Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
         """
+        _app_logger.info("Predicting from Torch Tensor")
+
+
         if images_tensor.ndim == 3:
             images_tensor = images_tensor.unsqueeze(0)
         if (

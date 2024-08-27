@@ -8,7 +8,7 @@ from pathlib import Path
 IMG_SIZE = (512, 512)
 ARCHITECTURE = "tf_efficientdet_d0"
 EPOCHS = 200
-BATCH_SIZE = 32
+BATCH_SIZE = 8
 RESULTS_DIR = Path("output")
 MODEL_DIR = Path("model")
 GRAPH_DIR = Path("graphs")

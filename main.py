@@ -2,15 +2,29 @@
 
 # Libraries
 import os
+import warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow INFO and WARNING messages
+warnings.filterwarnings("ignore", category=UserWarning) # Suppress UserWarnings
 
 # Custom files
 from utils.logger import _app_logger
 from scripts.efficient_det import train_efficient_det, validate_efficient_det
 
+# =================================== FUNCTIONS =================================== #
+
+def manage_output_directories():
+	from utils.constants import RESULTS_DIR, MODEL_DIR, GRAPH_DIR, IMG_DIR
+	for directory in [RESULTS_DIR, MODEL_DIR, GRAPH_DIR, IMG_DIR]:
+		if not directory.exists():
+			directory.mkdir(parents=True)
+			_app_logger.info(f"Created directory: {directory}")
+
 # ===================================== MAIN ===================================== #
 
 def main():
+	# Create output directories
+	manage_output_directories()
+
 	# Main menu
 	while True:
 		print("========== Main Menu ==========")

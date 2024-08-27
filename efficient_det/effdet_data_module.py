@@ -7,6 +7,7 @@ import torch
 
 # Custom files
 from utils.functions import *
+from utils.constants import *
 from efficient_det.effdet_dataset import EfficientDetDataset
 
 # ===================================== CLASS ===================================== #
@@ -16,8 +17,8 @@ class EfficientDetDataModule(LightningDataModule):
         self,
         train_dataset_adaptor,
         validation_dataset_adaptor,
-        train_transforms=get_train_transforms(target_img_size=img_size[0]),
-        valid_transforms=get_valid_transforms(target_img_size=img_size[0]),
+        train_transforms=get_train_transforms(target_img_size=IMG_SIZE[0]),
+        valid_transforms=get_valid_transforms(target_img_size=IMG_SIZE[0]),
         num_workers=4,
         batch_size=8,
     ):

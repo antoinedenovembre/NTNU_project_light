@@ -21,9 +21,6 @@ from utils.logger import _app_logger
 
 # ==================================================== FUNCTIONS ====================================================
 
-architecture = "tf_efficientdet_d0"
-img_size = (512, 512)
-
 def get_rectangle_edges_from_pascal_bbox(bbox):
     xmin_top_left, ymin_top_left, xmax_bottom_right, ymax_bottom_right = bbox
 
@@ -33,7 +30,6 @@ def get_rectangle_edges_from_pascal_bbox(bbox):
 
     return bottom_left, width, height
 
-
 def get_pascal_bbox(bbox):
     xmin, ymin = bbox[0], bbox[1]
     width, height = bbox[2], bbox[3]
@@ -41,14 +37,12 @@ def get_pascal_bbox(bbox):
     ymax = ymin + height
     return [xmin, ymin, xmax, ymax]
 
-
 def get_pascal_bboxes(bboxes):
     # coco -> pascal
     out = []
     for bbox in bboxes:
         out.append(get_pascal_bbox(bbox))
     return out
-
 
 def draw_pascal_voc_bboxes(
     plot_ax,
@@ -86,7 +80,6 @@ def draw_pascal_voc_bboxes(
         plot_ax.add_patch(rect_1)
         plot_ax.add_patch(rect_2)
 
-
 def show_image(
     image, bboxes=None, draw_bboxes_fn=draw_pascal_voc_bboxes, figsize=(10, 10)
 ):
@@ -97,7 +90,6 @@ def show_image(
         draw_bboxes_fn(ax, bboxes)
 
     plt.show()
-
 
 def create_model(num_classes=1, image_size=512, architecture="tf_efficientnetv2_l"):
     # efficientdet_model_param_dict["tf_efficientnetv2_l"] = dict(
@@ -114,7 +106,7 @@ def create_model(num_classes=1, image_size=512, architecture="tf_efficientnetv2_
 
     _app_logger.debug(config)
 
-    net = EfficientDet(config, pretrained_backbone=True)
+    net = EfficientDet(config, pretrained_backbone=False)
     net.class_net = nn.Identity()
     net.box_net = nn.Identity()
     # net.load_state_dict(
@@ -123,7 +115,6 @@ def create_model(num_classes=1, image_size=512, architecture="tf_efficientnetv2_
     net.class_net = HeadNet(config, num_outputs=config.num_classes)
     net.box_net = HeadNet(config, num_outputs=4)
     return DetBenchTrain(net, config)
-
 
 def get_train_transforms(target_img_size=512):
     return A.Compose(
@@ -139,7 +130,6 @@ def get_train_transforms(target_img_size=512):
         ),
     )
 
-
 def get_valid_transforms(target_img_size=512):
     return A.Compose(
         [
@@ -153,10 +143,8 @@ def get_valid_transforms(target_img_size=512):
         ),
     )
 
-"""#body p2 model creation"""
-
 def run_wbf(
-    predictions, image_size=img_size[0], iou_thr=0.44, skip_box_thr=0.43, weights=None
+    predictions, image_size=IMG_SIZE[0], iou_thr=0.44, skip_box_thr=0.43, weights=None
 ):
     bboxes = []
     confidences = []
@@ -181,7 +169,6 @@ def run_wbf(
         class_labels.append(labels.tolist())
 
     return bboxes, confidences, class_labels
-
 
 def run_soft_nms(predictions, iou_thr=0.44, skip_box_thr=0.12, sigma=0.5):
     bboxes = []
