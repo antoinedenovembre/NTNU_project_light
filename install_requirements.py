@@ -9,23 +9,24 @@ from tqdm import tqdm
 
 # List of required libraries with versions where necessary
 libraries = [
-    'albumentations',             # Use latest unless a specific version is needed
-    'colorama',                   # Use latest unless a specific version is needed
-    'effdet',                     # Match this with compatible version for torch 2.1.2
-    'ensemble-boxes',             # Use latest unless a specific version is needed
-    'fastcore',                   # Use latest unless a specific version is needed
-    'fvcore',                     # Use latest unless a specific version is needed
+    'albumentations',
+    'colorama',
+    'effdet',
+    'ensemble-boxes',
+    'fastcore',
+    'fvcore',
     'git+https://github.com/alexhock/object-detection-metrics',
-    'matplotlib',                 # Use latest unless a specific version is needed
-    'object_detection_metrics',   # Use latest unless a specific version is needed
-    'Pillow',                     # Use latest unless a specific version is needed
-    'pycocotools',                # Use latest unless a specific version is needed
-    'pytorch-lightning',          # Match this with compatible version for torch 2.1.2
-    'tensorboard',                # Use latest unless a specific version is needed
-    'torch',                      # Specific version of torch
-    'torchsummary',               # Use latest unless a specific version is needed
-    'torchvision',                # Match this with compatible version for torch 2.1.2
-    'tqdm'                        # Use latest unless a specific version is needed
+    'matplotlib',
+    'object_detection_metrics',
+    'Pillow',
+    'pycocotools',
+    'pytorch-lightning',
+    'tensorboard',
+    'torch',
+    'torchsummary',
+    'torchvision',
+    'tqdm',
+    'seaborn'
 ]
 
 def install_libraries():

@@ -9,12 +9,13 @@ warnings.filterwarnings("ignore", category=UserWarning) # Suppress UserWarnings
 # Custom files
 from utils.logger import _app_logger
 from scripts.efficient_det import train_efficient_det, validate_efficient_det
+from utils.functions import backup_model
 
 # =================================== FUNCTIONS =================================== #
 
 def manage_output_directories():
-	from utils.constants import RESULTS_DIR, MODEL_DIR, GRAPH_DIR, IMG_DIR
-	for directory in [RESULTS_DIR, MODEL_DIR, GRAPH_DIR, IMG_DIR]:
+	from utils.constants import RESULTS_DIR, MODEL_DIR, MODEL_BACKUP_DIR, GRAPH_DIR, IMG_DIR
+	for directory in [RESULTS_DIR, MODEL_DIR, MODEL_BACKUP_DIR, GRAPH_DIR, IMG_DIR]:
 		if not directory.exists():
 			directory.mkdir(parents=True)
 			_app_logger.info(f"Created directory: {directory}")
@@ -30,9 +31,10 @@ def main():
 		print("========== Main Menu ==========")
 		print("1. Train EfficientDet model")
 		print("2. Validate EfficientDet model")
+		print("3. Backup model")
 		print("0. Exit")
 
-		choice = input("Enter your choice (0-2): ")
+		choice = input("Enter your choice (0-3): ")
 
 		if choice == "1":
 			_app_logger.info("Training EfficientDet model...")
@@ -40,6 +42,9 @@ def main():
 		elif choice == "2":
 			_app_logger.info("Validating EfficientDet model...")
 			validate_efficient_det(num_sanity_val_steps=0)
+		elif choice == "3":
+			_app_logger.info("Backing up model...")
+			backup_model()
 		elif choice == "0":
 			break
 		else:

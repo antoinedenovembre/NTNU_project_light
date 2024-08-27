@@ -4,6 +4,9 @@
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 
+# Custom files
+from utils.constants import *
+
 # ===================================== CLASS ===================================== #
 
 class LossPlotCallback(pl.Callback):
@@ -34,7 +37,6 @@ class LossPlotCallback(pl.Callback):
         plt.ylabel('Loss')
         plt.title('Loss Curve')
         plt.legend()
-        plt.show()
 
     def on_train_end(self, trainer, pl_module):
         # Plot the training and validation loss curves at the end of training
@@ -47,4 +49,6 @@ class LossPlotCallback(pl.Callback):
         plt.ylabel('Loss')
         plt.title('Loss Curve')
         plt.legend()
-        plt.show()
+        
+        # Save the plot
+        plt.savefig(LOSS_CURVE_FULL_PATH)
