@@ -13,12 +13,6 @@ from utils.logger import _app_logger
 # ===================================== CLASS ===================================== #
 
 class PigsDatasetAdapter:
-    """def __init__(self, images_path, anns_path):
-        self.image_paths = [images_path / path for path in os.listdir(images_path)]
-        self.coco_anns = [
-            COCO(anns_path / (path[:-4] + ".json")) for path in os.listdir(images_path)
-        ]"""
-
     def __init__(self, images_path, anns_path):
         self.images_path = images_path
         self.anns_path = anns_path
@@ -69,30 +63,6 @@ class PigsDatasetAdapter:
         else:
             _app_logger.warning(f"Warning: No annotations found for image {image_filename}")
             return []
-
-
-    """def get_image_and_labels_by_idx(self, index):
-        image = Image.open(self.image_paths[index])
-        coco = self.coco_anns[index]
-        anns = coco.loadAnns(coco.getAnnIds())
-        boxes = np.zeros((len(anns), 4))
-        bad_anns = []
-        for i, ann in enumerate(anns):
-            try:
-                boxes[i, :] = get_pascal_bbox(ann["bbox"])
-                if np.all(boxes[i, :] == 0):
-                    bad_anns.append(i)
-                    continue
-            except ValueError:
-                print("--- BAD BOX ---")
-                print("--- image id: {} ---".format(i))
-                bad_anns.append(i)
-                continue
-        boxes = np.delete(boxes, bad_anns, 0)
-        labels = np.ones(len(anns))
-        labels = np.delete(labels, bad_anns, 0)
-
-            return image, boxes, labels, index"""
 
     def get_image_and_labels_by_idx(self, index):
         # Open the image file at the given index
