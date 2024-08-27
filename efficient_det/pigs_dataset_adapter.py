@@ -25,16 +25,20 @@ class PigsDatasetAdapter:
         if not images_path.exists():
             raise FileNotFoundError(f"Images directory not found: {images_path}")
 
-       # Get all image files
+        # Get all image files
         self.image_paths = [path for path in images_path.iterdir() if path.suffix.lower() in ['.jpg', '.jpeg', '.png']]
 
-       # Load COCO annotations from all JSON files in the directory
+        # Load COCO annotations from all JSON files in the directory
         self.coco = COCO()
         for ann_file in self.anns_path.glob("*.json"):
             with open(ann_file, 'r') as f:
                 dataset = json.load(f)
             self.coco.dataset.update(dataset)
-            self.coco.createIndex()
+            # Silencing stdout while creating the index
+            import os, contextlib
+            with open(os.devnull, 'w') as devnull:
+                with contextlib.redirect_stdout(devnull):
+                    self.coco.createIndex()
 
         # Map image filenames to COCO image IDs
         self.image_id_map = {}
@@ -61,7 +65,7 @@ class PigsDatasetAdapter:
         if image_filename in self.annotations:
             return self.annotations[image_filename]
         else:
-            _app_logger.warning(f"Warning: No annotations found for image {image_filename}")
+            _app_logger.warning(f"No annotations found for image {image_filename}")
             return []
 
     def get_image_and_labels_by_idx(self, index):

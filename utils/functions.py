@@ -106,7 +106,7 @@ def create_model(num_classes=1, image_size=512, architecture="tf_efficientnetv2_
 
     _app_logger.debug(config)
 
-    net = EfficientDet(config, pretrained_backbone=True)
+    net = EfficientDet(config, pretrained_backbone=False)
     net.class_net = nn.Identity()
     net.box_net = nn.Identity()
     # net.load_state_dict(

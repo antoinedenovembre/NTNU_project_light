@@ -120,6 +120,8 @@ class EfficientDetModel(LightningModule):
         Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
 
         """
+        _app_logger.info("Predicting from List of PIL Images")
+
         image_sizes = [(image.size[1], image.size[0]) for image in images]
         images_tensor = torch.stack(
             [
@@ -144,6 +146,8 @@ class EfficientDetModel(LightningModule):
         Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
 
         """
+        _app_logger.info("Predicting from Numpy Multidimensional Array")
+
         if images_tensor.ndim == 3:
             images_tensor = images_tensor[np.newaxis, :]
 
@@ -169,6 +173,9 @@ class EfficientDetModel(LightningModule):
             images_tensor: the images tensor returned from the dataloader
         Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
         """
+        _app_logger.info("Predicting from Torch Tensor")
+
+
         if images_tensor.ndim == 3:
             images_tensor = images_tensor.unsqueeze(0)
         if (

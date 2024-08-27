@@ -2,7 +2,9 @@
 
 # Libraries
 import os
+import warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow INFO and WARNING messages
+warnings.filterwarnings("ignore", category=UserWarning) # Suppress UserWarnings
 
 # Custom files
 from utils.logger import _app_logger
