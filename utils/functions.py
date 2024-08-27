@@ -21,8 +21,6 @@ from utils.logger import _app_logger
 
 # ==================================================== FUNCTIONS ====================================================
 
-img_size = (512, 512)
-
 def get_rectangle_edges_from_pascal_bbox(bbox):
     xmin_top_left, ymin_top_left, xmax_bottom_right, ymax_bottom_right = bbox
 
@@ -146,7 +144,7 @@ def get_valid_transforms(target_img_size=512):
     )
 
 def run_wbf(
-    predictions, image_size=img_size[0], iou_thr=0.44, skip_box_thr=0.43, weights=None
+    predictions, image_size=IMG_SIZE[0], iou_thr=0.44, skip_box_thr=0.43, weights=None
 ):
     bboxes = []
     confidences = []

@@ -7,6 +7,7 @@ import torch
 
 # Custom files
 from utils.functions import *
+from utils.constants import *
 from utils.logger import _app_logger
 
 # ===================================== CLASS ===================================== #
@@ -15,7 +16,7 @@ class EfficientDetDataset(Dataset):
     def __init__(
         self,
         dataset_adaptor,
-        transforms=get_valid_transforms(target_img_size=img_size[0]),
+        transforms=get_valid_transforms(target_img_size=IMG_SIZE[0]),
     ):
         self.ds = dataset_adaptor
         self.transforms = transforms
