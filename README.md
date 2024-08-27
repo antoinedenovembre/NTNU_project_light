@@ -7,7 +7,7 @@ Deep learning project about animal behaviour.
 For now, the project includes:
 
 - EfficientDet model training and saving
-- EfficientDet evaluation
+- EfficientDet evaluation (including metrics and image testing)
 
 ## Prerequisites
 
@@ -24,6 +24,38 @@ git clone https://github.com/antoinedenovembre/NTNU_project.git
 cd NTNU_project
 python install_requirements.py
 ```
+
+**/!\ Important: You also need to make sure you have the following structure, including the `data` folder**
+```
+NTNU_project_light
+│   README.md
+│   main.py
+│   install_requirements.py
+│
+└───data
+│   └───train
+│   │   │   annotations
+│   │   │   │   train.json
+│   │   │ 
+│   │   │   images
+│   │   │   │   image1.jpg/png/...
+│   │   │   │   ...
+│   │
+│   └───val
+│       │   annotations
+│       │   │   val.json
+│       │
+│       │   images
+│           │   image1.jpg/png/...
+│           │   ...
+│
+└───efficient_det
+│
+└───utils
+│
+└───scripts
+```
+
 
 ## Usage
 

@@ -8,14 +8,15 @@ torch.set_float32_matmul_precision('medium')
 torch.cuda.empty_cache()
 import os
 import logging
+import tqdm
 
 # Custom files
+from utils.logger import _app_logger, _lightning_logger
 from efficient_det.pigs_dataset_adapter import PigsDatasetAdapter
 from efficient_det.effdet_data_module import EfficientDetDataModule
 from efficient_det.effdet_model import EfficientDetModel
 from efficient_det.loss_plot_callback import LossPlotCallback
 from utils.constants import *
-from utils.logger import _app_logger, _lightning_logger
 from utils.functions import *
 
 # ===================================== GLOBALS ===================================== #
@@ -84,7 +85,7 @@ def train_efficient_det(num_sanity_val_steps=1):
         img_size=IMG_SIZE[0],
         model_architecture=ARCHITECTURE,
         iou_threshold=0.44,
-        prediction_confidence_threshold=0.2,
+        prediction_confidence_threshold=CONFIDENCE_THRESHOLD,
         sigma=0.8,
         learning_rate=0.003
     )
@@ -92,6 +93,11 @@ def train_efficient_det(num_sanity_val_steps=1):
 
     # Trainer setup
     _app_logger.info(f"Starting training for {EPOCHS} epochs...")
+    callbacks = [LossPlotCallback()]
+    # If early stopping in callback list, log it
+    if EARLY_STOPPING:
+        callbacks.append(EarlyStopping(monitor='val_loss', patience=5))
+        _app_logger.info("Early stopping enabled.")
     logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
     trainer = Trainer(
         logger=_lightning_logger,
@@ -101,9 +107,8 @@ def train_efficient_det(num_sanity_val_steps=1):
         num_sanity_val_steps=num_sanity_val_steps,
         accumulate_grad_batches=3,
         log_every_n_steps=31,
-        callbacks=[LossPlotCallback(), EarlyStopping(monitor="val_loss", mode="min")],
+        callbacks=[LossPlotCallback()],
     )
-    logging.getLogger("pytorch_lightning").setLevel(logging.INFO)
     trainer.fit(model, dm)
     _app_logger.info("Training complete.")
 
@@ -136,7 +141,7 @@ def validate_efficient_det(num_sanity_val_steps=1):
         img_size=IMG_SIZE[0],
         model_architecture=ARCHITECTURE,
         iou_threshold=0.8,
-        prediction_confidence_threshold=0.2,
+        prediction_confidence_threshold=CONFIDENCE_THRESHOLD,
         sigma=0.8,
     )
 
@@ -146,7 +151,8 @@ def validate_efficient_det(num_sanity_val_steps=1):
     all_truths = []
     all_predictions = []
 
-    for i in range(len(pigs_val_ds)):
+    # Same as above but with tqdm progress bar
+    for i in tqdm.tqdm(range(len(pigs_val_ds)), desc="Validating model", unit="image"):
         image, truth_bboxes, _, _ = pigs_val_ds.get_image_and_labels_by_idx(i)
         all_truths.append(truth_bboxes.tolist())
 
@@ -161,6 +167,8 @@ def validate_efficient_det(num_sanity_val_steps=1):
                 actual_bboxes=truth_bboxes.tolist(),
                 image_id=i
         )
+    
+    get_all_metrics(all_predictions, all_truths)
 
     # This trainer is only used for validation
     logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)

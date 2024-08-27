@@ -70,7 +70,7 @@ def suppress_stdout():
             sys.stdout = old_stdout
 
 # Static instanciation of the app logger
-_init_logger(logging.DEBUG)
+_init_logger(logging.INFO)
 _app_logger = logging.getLogger(APP_LOGGER_NAME)
 
 # Create specific logger for the trainer

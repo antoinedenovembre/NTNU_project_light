@@ -8,8 +8,12 @@
 *.log
 logs/
 
-# Image outputs
-output/images/
+# Outputs
+output/
+
+# Except folders that contain models
+!output/model
+!output/model_backup
 
 # Input data
 data/
