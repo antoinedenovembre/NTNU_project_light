@@ -6,6 +6,7 @@
 
 # Logs
 *.log
+logs/
 
 # Image outputs
 output/images/
