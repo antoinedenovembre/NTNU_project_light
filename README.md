@@ -22,7 +22,7 @@ Step-by-step guide on how to install the project:
 ```bash
 git clone https://github.com/antoinedenovembre/NTNU_project.git
 cd NTNU_project
-python3 install_requirements.py
+python install_requirements.py
 ```
 
 ## Usage
@@ -30,7 +30,7 @@ python3 install_requirements.py
 Here are a few examples of useful commands and/or tasks.
 
 ```bash
-python3 main.py
+python main.py
 ```
 
 ## Documentation
@@ -52,4 +52,8 @@ Show your appreciation to those who have contributed to the project.
 
 ### What PC can be used?
 
-Ideally one with a sufficient GPU, like NVIDIA RTX 2080Ti
+- Ideally one with a sufficient GPU, like NVIDIA RTX 2080Ti
+
+### What OS can be used?
+
+- Any Linux distro should do the trick, but I recommend using Ubuntu 22.04+
