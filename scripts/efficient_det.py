@@ -151,7 +151,6 @@ def validate_efficient_det(num_sanity_val_steps=1):
     all_truths = []
     all_predictions = []
 
-    # Same as above but with tqdm progress bar
     for i in tqdm.tqdm(range(len(pigs_val_ds)), desc="Validating model", unit="image"):
         image, truth_bboxes, _, _ = pigs_val_ds.get_image_and_labels_by_idx(i)
         all_truths.append(truth_bboxes.tolist())
@@ -160,7 +159,7 @@ def validate_efficient_det(num_sanity_val_steps=1):
         all_predictions.append((predicted_bboxes[0], predicted_class_confidences[0], predicted_class_labels[0]))
         
         # Compare predictions with actual bounding boxes for the current image
-        compare_bboxes_for_image(
+        show_bboxes_on_image(
                 image,
                 predicted_bboxes=predicted_bboxes[0],
                 predicted_class_confidences=predicted_class_confidences[0],
@@ -169,16 +168,3 @@ def validate_efficient_det(num_sanity_val_steps=1):
         )
     
     get_all_metrics(all_predictions, all_truths)
-
-    # This trainer is only used for validation
-    logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
-    trainer = Trainer(
-        logger=_lightning_logger,
-        accelerator=ACCELERATOR,
-        devices=DEVICES,
-        max_epochs=EPOCHS,
-        num_sanity_val_steps=num_sanity_val_steps,
-        accumulate_grad_batches=3,
-        log_every_n_steps=31,
-    )
-    trainer.validate(model, dm)

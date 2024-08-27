@@ -38,7 +38,8 @@ def main():
 
 		if choice == "1":
 			_app_logger.info("Training EfficientDet model...")
-			train_efficient_det(num_sanity_val_steps=0)
+			train_efficient_det(num_sanity_val_steps=1)
+			validate_efficient_det(num_sanity_val_steps=1)
 		elif choice == "2":
 			_app_logger.info("Validating EfficientDet model...")
 			validate_efficient_det(num_sanity_val_steps=0)

@@ -49,6 +49,8 @@ class LossPlotCallback(pl.Callback):
         plt.ylabel('Loss')
         plt.title('Loss Curve')
         plt.legend()
+        plt.xlim(0, len(self.train_losses))
+        plt.ylim(0, max(max(self.train_losses), max(self.val_losses)))
         
         # Save the plot
         plt.savefig(LOSS_CURVE_FULL_PATH)
