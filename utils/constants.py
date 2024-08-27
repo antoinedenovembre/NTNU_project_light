@@ -25,7 +25,6 @@ LOSS_CURVE_FULL_PATH = GRAPH_DIR / Path("loss_curve.png")
 PRECISION_RECALL_FULL_PATH = GRAPH_DIR / Path("precision_recall_curve.png")
 DETECTION_PERF_FULL_PATH = GRAPH_DIR / Path("detection_performance.png")
 F1_SCORE_FULL_PATH = GRAPH_DIR / Path("f1_score.png")
-ROC_CURVE_FULL_PATH = GRAPH_DIR / Path("roc_curve.png")
 CONFUSION_MATRIX_FULL_PATH = GRAPH_DIR / Path("confusion_matrix.png")
 
 # Dataset constants
