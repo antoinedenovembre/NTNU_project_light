@@ -245,72 +245,83 @@ def compute_iou(box1, box2):
         iou = intersection / union
         return iou
 
-def plot_precision_recall_curve(predictions, ground_truths, iou_thresholds=np.linspace(0.01, 0.99, 50)):
-    precisions_list = []
-    recalls_list = []
+def calculate_map(predictions, ground_truths, iou_threshold=0.9):
+    """
+    Calculate the Mean Average Precision (mAP) for the given predictions and ground truths.
+
+    Args:
+    - predictions: List of tuples (predicted_bboxes, predicted_class_confidences, predicted_class_labels)
+    - ground_truths: List of ground truth bounding boxes for each image
+    - iou_threshold: Intersection over Union (IoU) threshold to consider a detection as true positive
+
+    Returns:
+    - mAP: Mean Average Precision
+    """
+
+    aps = []
+
+    for i in range(len(predictions)):
+        pred_boxes, pred_scores, _ = predictions[i]
+        gt_boxes = ground_truths[i]
+
+        # Convert pred_scores to a NumPy array
+        pred_scores = np.array(pred_scores)
+
+        tp = np.zeros(len(pred_boxes))
+        fp = np.zeros(len(pred_boxes))
+
+        for j, pred_box in enumerate(pred_boxes):
+            best_iou = 0
+            for gt_box in gt_boxes:
+                iou = compute_iou(pred_box, gt_box)
+                if iou > best_iou:
+                    best_iou = iou
+
+            if best_iou > iou_threshold:
+                tp[j] = 1
+            else:
+                fp[j] = 1
+
+        # Sort by scores (descending)
+        indices = np.argsort(-pred_scores) # Now pred_scores is a NumPy array
+        tp = tp[indices]
+        fp = fp[indices]
+
+        # Cumulative sum
+        tp_cumsum = np.cumsum(tp)
+        fp_cumsum = np.cumsum(fp)
+
+        recalls = tp_cumsum / len(gt_boxes)
+        precisions = tp_cumsum / (tp_cumsum + fp_cumsum)
+
+        ap = np.mean(precisions)
+        aps.append(ap)
+
+    mAP = np.mean(aps)
+    return mAP
+
+def plot_maps(predictions, ground_truths, iou_thresholds=np.linspace(0.01, 0.99, 50)):
+    map_list = []
 
     for threshold in iou_thresholds:
-        tp_count = 0
-        fp_count = 0
-        fn_count = 0
-        tn_count = 0 # We assume TN is 0 since we focus on object detection, we won't consider it in the calculations
+        map_list.append(calculate_map(predictions, ground_truths, threshold))
 
-        for i in range(len(predictions)):
-            pred_boxes, _, _ = predictions[i]
-            gt_boxes = ground_truths[i]
+    # Plotting the mAPs over IoU thresholds
+    fig, ax = plt.subplots(figsize=(12, 6))
 
-            matched_gt = np.zeros(len(gt_boxes))
+    ax.plot(iou_thresholds, map_list, marker='o', label='mAP', color='purple')
+    ax.set_title('Mean Average Precision (mAP) over IoU Thresholds')
+    ax.set_xlabel('IoU Threshold')
+    ax.set_ylabel('mAP')
+    ax.legend()
+    ax.grid(True)
 
-            for pred_box in pred_boxes:
-                best_iou = 0
-                best_gt_idx = -1
-                for j, gt_box in enumerate(gt_boxes):
-                    iou = compute_iou(pred_box, gt_box)
-                    if iou > best_iou:
-                        best_iou = iou
-                        best_gt_idx = j
+    ax.text(1.10, 0.60, r'$AP = \frac{TP}{TP + FP}$', fontsize=14, color='black', ha='left', va='center')
+    ax.text(1.10, 0.40, r'$mAP = \frac{1}{N} \sum_{i=1}^{N} AP_i$', fontsize=14, color='black', ha='left', va='center')
 
-                if best_iou >= threshold:
-                    if matched_gt[best_gt_idx] == 0:  # If this GT hasn't been matched yet
-                        tp_count += 1
-                        matched_gt[best_gt_idx] = 1  # Mark this GT as matched
-                    else:
-                        fp_count += 1
-                else:
-                    fp_count += 1
+    fig.subplots_adjust(right=0.8)
 
-            fn_count += np.sum(matched_gt == 0)
-
-        # Calculate TPR and FPR
-        precision, recall = 0, 0
-        if (tp_count + fp_count) > 0:
-            precision = tp_count / (tp_count + fp_count)
-        if (fp_count + fn_count) > 0:
-            recall = fp_count / (fp_count + fn_count)
-
-        precisions_list.append(precision)
-        recalls_list.append(recall)
-
-    # Plotting the Precision-Recall curve
-    plt.figure(figsize=(10, 6))
-
-    plt.plot(precisions_list, recalls_list, marker='o', label='EfficientDet', color='blue')
-    plt.plot([0, 1], [0, 0], linestyle='--', color='grey', label='No skill')
-    plt.plot([0, 1], [1, 1], linestyle='-', color='red', label='Perfect model')
-    plt.plot([1, 1], [1, 0], linestyle='-', color='red')
-
-    plt.title('Precision-Recall')
-    plt.xlabel('Precision')
-    plt.ylabel('Recall')
-    plt.legend()
-    plt.grid(True)
-
-    # Set the limits with a small padding
-    padding = 0.05  # 5% padding
-    plt.ylim(-padding, 1 + padding)  # Slightly below 0 and above 1
-    plt.xlim(-padding, 1 + padding)  # Slightly below 0 and above 1
-
-    plt.savefig(PRECISION_RECALL_FULL_PATH)
+    plt.savefig(MAP_FULL_PATH)
 
 def plot_detection_performance_curve(predictions, ground_truths, iou_thresholds=np.linspace(0.01, 0.99, 50)):
     """
@@ -326,44 +337,42 @@ def plot_detection_performance_curve(predictions, ground_truths, iou_thresholds=
     tpr_list = []
 
     for threshold in iou_thresholds:
-        fn_count = 0
         tp_count = 0
-        total_gt = 0
+        fp_count = 0
+        fn_count = 0
+        tn_count = 0 # We assume TN is 0 since we focus on object detection, we won't consider it in the calculations
 
-        for i in range(len(predictions)):
-            pred_boxes, _, _ = predictions[i]
-            gt_boxes = ground_truths[i]
-            total_gt += len(gt_boxes)
+        tp_count, fp_count, fn_count = compute_confusion_matrix(predictions, ground_truths, threshold)
 
-            for gt_box in gt_boxes:
-                best_iou = 0
-                for pred_box in pred_boxes:
-                    iou = compute_iou(pred_box, gt_box)
-                    if iou > best_iou:
-                        best_iou = iou
+        # Calculate TPR and FNR
+        fnr, tpr = 0, 0
+        if (tp_count + fn_count) > 0:
+            fnr = fn_count / (tp_count + fn_count)
+            tpr = tp_count / (tp_count + fn_count)
 
-                if best_iou >= threshold:
-                    tp_count += 1
-                else:
-                    fn_count += 1
-
-        fnr = fn_count / total_gt
-        tpr = tp_count / total_gt
         fnr_list.append(fnr)
         tpr_list.append(tpr)
 
-    plt.figure(figsize=(10, 6))
+    # Creating a subplot grid with specified figure width and height
+    fig, ax = plt.subplots(figsize=(12, 6))  # Increased figure size for extra space
 
-    plt.plot(iou_thresholds, fnr_list, marker='o', label='False Negative Rate (FNR)', color='red')
-    plt.plot(iou_thresholds, tpr_list, marker='o', label='True Positive Rate (TPR)', color='green')
-    plt.plot([0, 1], [1, 1], linestyle='--', color='grey', label='Perfect model')
-    plt.plot([0, 1], [0, 0], linestyle='--', color='grey')
+    # Plotting the curves on the axes
+    ax.plot(iou_thresholds, fnr_list, marker='o', label='False Negative Rate (FNR)', color='red')
+    ax.plot(iou_thresholds, tpr_list, marker='o', label='True Positive Rate (TPR)', color='green')
+    ax.plot([0, 1], [1, 1], linestyle='--', color='grey', label='Perfect model')
+    ax.plot([0, 1], [0, 0], linestyle='--', color='grey')
 
-    plt.title('Detection Performance')
-    plt.xlabel('IoU Threshold')
-    plt.ylabel('Rate')
-    plt.legend()
-    plt.grid(True)
+    ax.set_title('Detection Performance')
+    ax.set_xlabel('IoU Threshold')
+    ax.set_ylabel('Rate')
+    ax.legend()
+    ax.grid(True)
+    ax.text(1.15, 0.55, r'$FNR = \frac{FN}{TP + FN}$', fontsize=14, color='black', ha='left', va='center')
+    ax.text(1.15, 0.35, r'$TPR = \frac{TP}{TP + FN}$', fontsize=14, color='black', ha='left', va='center')
+
+    # Adjusting the spacing between the plot and the formulas
+    fig.subplots_adjust(right=0.8)
+
     plt.savefig(DETECTION_PERF_FULL_PATH)
 
 def plot_f1_score_curve(predictions, ground_truths, iou_thresholds=np.linspace(0.01, 0.99, 50)):
@@ -383,38 +392,14 @@ def plot_f1_score_curve(predictions, ground_truths, iou_thresholds=np.linspace(0
         fn_count = 0
         tn_count = 0 # We assume TN is 0 since we focus on object detection, we won't consider it in the calculations
 
-        for i in range(len(predictions)):
-            pred_boxes, _, _ = predictions[i]
-            gt_boxes = ground_truths[i]
-
-            matched_gt = np.zeros(len(gt_boxes))
-
-            for pred_box in pred_boxes:
-                best_iou = 0
-                best_gt_idx = -1
-                for j, gt_box in enumerate(gt_boxes):
-                    iou = compute_iou(pred_box, gt_box)
-                    if iou > best_iou:
-                        best_iou = iou
-                        best_gt_idx = j
-
-                if best_iou >= threshold:
-                    if matched_gt[best_gt_idx] == 0:  # If this GT hasn't been matched yet
-                        tp_count += 1
-                        matched_gt[best_gt_idx] = 1  # Mark this GT as matched
-                    else:
-                        fp_count += 1
-                else:
-                    fp_count += 1
-
-            fn_count += np.sum(matched_gt == 0)
+        tp_count, fp_count, fn_count = compute_confusion_matrix(predictions, ground_truths, threshold)
 
         # Calculate TPR and FPR
         precision, recall = 0, 0
         if (tp_count + fp_count) > 0:
             precision = tp_count / (tp_count + fp_count)
-        if (fp_count + fn_count) > 0:
-            recall = fp_count / (fp_count + fn_count)
+        if (tp_count + fn_count) > 0:
+            recall = tp_count / (tp_count + fn_count)
 
         # Calculate F1 Score
         f1_score = 0
@@ -423,18 +408,20 @@ def plot_f1_score_curve(predictions, ground_truths, iou_thresholds=np.linspace(0
         
         f1_scores.append(f1_score)
 
-    plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(14, 6))
 
-    plt.plot(iou_thresholds, f1_scores, marker='o', label='F1 Score', color='blue')
-    plt.plot([0, 1], [1, 1], linestyle='--', color='grey', label='Perfect model')
-    plt.plot([0, 0], [0, 1], linestyle='--', color='grey')
-    plt.plot([1, 1], [1, 0], linestyle='--', color='grey')
+    ax.plot(iou_thresholds, f1_scores, marker='o', label='F1 Score', color='blue')
+    ax.set_title('F1 Score')
+    ax.set_xlabel('IoU Threshold')
+    ax.set_ylabel('F1 Score')
+    ax.legend()
+    ax.grid(True)
 
-    plt.title('F1 Score')
-    plt.xlabel('Confidence')
-    plt.ylabel('F1 Score')
-    plt.legend()
-    plt.grid(True)
+    ax.text(1.10, 0.60, r'$Precision = \frac{TP}{TP + FP}$', fontsize=14, color='black', ha='left', va='center')
+    ax.text(1.10, 0.40, r'$Recall = \frac{TP}{TP + FN}$', fontsize=14, color='black', ha='left', va='center')
+    ax.text(1.10, 0.20, r'$F1 Score = 2 \times \frac{Precision \times Recall}{Precision + Recall}$', fontsize=14, color='black', ha='left', va='center')
+
+    fig.subplots_adjust(right=0.7)
 
     plt.savefig(F1_SCORE_FULL_PATH)
 
@@ -500,7 +487,7 @@ def plot_confusion_matrix(tp, fp, fn):
     sns.heatmap(matrix, annot=True, fmt='.2f', cmap='Blues', cbar=False,
                 xticklabels=['Predicted Positive', 'Predicted Negative'],
                 yticklabels=['Actual Positive', 'Actual Negative'])
-    plt.title('Normalized Confusion Matrix')
+    plt.title('Normalized Confusion Matrix at IoU Threshold=0.5')
 
     plt.savefig(CONFUSION_MATRIX_FULL_PATH)
 
@@ -514,10 +501,10 @@ def get_all_metrics(predictions, ground_truths, iou_thresholds=np.linspace(0.01,
     - iou_thresholds: List of IoU thresholds to consider for the plot
     """
 
-    # Compute : Precision, Recall, F1 Score, ROC Curve, Detection Performance Curve, Precision-Recall Curve
-    plot_precision_recall_curve(predictions, ground_truths)
+    # Compute : Precision, Recall, F1 Score, Detection Performance Curve, mAP, and Confusion Matrix
     plot_detection_performance_curve(predictions, ground_truths, iou_thresholds)
     plot_f1_score_curve(predictions, ground_truths, iou_thresholds)
+    plot_maps(predictions, ground_truths, iou_thresholds)
 
     # Compute confusion matrix
     tp, fp, fn = compute_confusion_matrix(predictions, ground_truths)

@@ -11,7 +11,7 @@ EPOCHS = 200
 BATCH_SIZE = 8
 CONFIDENCE_THRESHOLD = 0.5
 EARLY_STOPPING = False
-VERSION = 0.1
+VERSION = 0.2
 
 # File paths
 RESULTS_DIR = Path("output")
@@ -23,10 +23,10 @@ MODEL_NAME = Path(f"effdet_{ARCHITECTURE}_no_barlow_V{VERSION}.pth")
 MODEL_FULL_PATH = MODEL_DIR / MODEL_NAME
 MODEL_BACKUP_FULL_PATH = MODEL_BACKUP_DIR / MODEL_NAME
 LOSS_CURVE_FULL_PATH = GRAPH_DIR / Path("loss_curve.png")
-PRECISION_RECALL_FULL_PATH = GRAPH_DIR / Path("precision_recall_curve.png")
 DETECTION_PERF_FULL_PATH = GRAPH_DIR / Path("detection_performance.png")
 F1_SCORE_FULL_PATH = GRAPH_DIR / Path("f1_score.png")
 CONFUSION_MATRIX_FULL_PATH = GRAPH_DIR / Path("confusion_matrix.png")
+MAP_FULL_PATH = GRAPH_DIR / Path("mAPs.png")
 
 # Dataset constants
 DATASET = Path("data")

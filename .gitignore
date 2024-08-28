@@ -17,3 +17,7 @@ output/
 
 # Input data
 data/
+
+# tmp
+vince/
+lightning_logs/

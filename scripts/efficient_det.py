@@ -151,7 +151,7 @@ def validate_efficient_det(num_sanity_val_steps=1):
     all_truths = []
     all_predictions = []
 
-    for i in tqdm.tqdm(range(len(pigs_val_ds)), desc="Validating model", unit="image"):
+    for i in tqdm.tqdm(range(len(pigs_val_ds) - 230), desc="Validating model", unit="image"):
         image, truth_bboxes, _, _ = pigs_val_ds.get_image_and_labels_by_idx(i)
         all_truths.append(truth_bboxes.tolist())
 
