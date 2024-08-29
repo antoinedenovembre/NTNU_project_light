@@ -209,7 +209,7 @@ def train_efficient_det(num_sanity_val_steps=1, use_backbone=True):
     )
     _app_logger.info(f"Model saved to {MODEL_FULL_PATH}")
 
-def validate_efficient_det(num_sanity_val_steps=1, use_backbone=True):
+def validate_efficient_det(num_sanity_val_steps=1):
     # Create paths
     train_images_path = DATASET / MODEL / TRAIN / IMAGE
     val_images_path = DATASET / MODEL / VALIDATION / IMAGE
@@ -217,13 +217,16 @@ def validate_efficient_det(num_sanity_val_steps=1, use_backbone=True):
     val_anns_path = DATASET / MODEL / VALIDATION / ANNOTATION
 
     MODEL_FULL_PATH = ""
-    if use_backbone:
-        MODEL_FULL_PATH = MODEL_DIR / MODEL_BARLOW_NAME
-    else:
-        MODEL_FULL_PATH = MODEL_DIR / MODEL_NO_BARLOW_NAME
-    if not os.path.exists(MODEL_FULL_PATH):
-        _app_logger.error(f"Model file not found at {MODEL_FULL_PATH}. Validation aborted.")
-        return
+    models_available = scan_models_in_output()
+    # Ask user to choose a model to validate
+    for i, model in enumerate(models_available):
+        print(f"{i}. {model}")
+    model_choice = int(input("Enter the model number to validate: "))
+    MODEL_FULL_PATH = models_available[model_choice]
+
+    if not MODEL_FULL_PATH:
+        _app_logger.error("No model found. Exiting...")
+        exit(1)
 
     _app_logger.info(f"Loading model from {MODEL_FULL_PATH} for validation.")
 

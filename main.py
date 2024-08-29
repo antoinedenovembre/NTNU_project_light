@@ -36,10 +36,13 @@ def main():
 		print("0. Exit")
 
 		choice = input("Enter your choice (0-4): ")
-		use_backbone = input("Use backbone? (y/n): ")
-		backbone_choice = (use_backbone == "y")
+		use_backbone = False
+		if choice == "1":
+			use_backbone = input("Use backbone? (y/n): ")
+			backbone_choice = (use_backbone == "y")
+			_app_logger.info(f"Using backbone: {backbone_choice}")
 
-		_app_logger.info(f"Choice: {choice}, use backbone: {backbone_choice}")
+		_app_logger.info(f"Choice: {choice}")
 
 		if choice == "1":
 			_app_logger.info("Training EfficientDet model...")
@@ -47,7 +50,7 @@ def main():
 			train_efficient_det(num_sanity_val_steps=1, use_backbone=backbone_choice)
 		elif choice == "2":
 			_app_logger.info("Validating EfficientDet model...")
-			validate_efficient_det(num_sanity_val_steps=1, use_backbone=backbone_choice)
+			validate_efficient_det(num_sanity_val_steps=1)
 		elif choice == "3":
 			_app_logger.info("Training EfficientNet backbone...")
 			train_efficient_net_backbone(num_sanity_val_steps=1)

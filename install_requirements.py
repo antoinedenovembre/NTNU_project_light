@@ -21,8 +21,6 @@ libraries = [
     'Pillow',
     'pycocotools',
     'pytorch-lightning',
-    'shutil',
-    'functools',
     'tensorboard',
     'timm',
     'torch',

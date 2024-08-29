@@ -543,3 +543,8 @@ def backup_model():
         # Copy each file recursively to the backup directory
         shutil.copytree(MODEL_DIR, MODEL_BACKUP_DIR)
         _app_logger.info(f"Model backed up to {MODEL_BACKUP_DIR}")
+
+def scan_models_in_output():
+    # Get all the models in the output directory
+    models = [model for model in MODEL_DIR.iterdir() if model.is_file() and "backbone" not in model.name]
+    return models
