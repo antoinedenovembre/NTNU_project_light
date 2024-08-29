@@ -4,32 +4,46 @@ from pathlib import Path
 
 # ==================================== CONSTANTS ====================================
 
+# General constants
+VERSION = 0.3
+
 # Model constants
 IMG_SIZE = (512, 512)
-ARCHITECTURE = "tf_efficientdet_d0"
-EPOCHS = 200
-BATCH_SIZE = 8
+ARCHITECTURE_D0 = "tf_efficientdet_d0"
+ARCHITECTURE_D1 = "tf_efficientdet_d1"
+MODEL_EPOCHS = 160
+MODEL_BATCH_SIZE = 8
+
+BACKBONE_EPOCHS = 50
+BACKBONE_BATCH_SIZE = 2
+BACKBONE_NUM_WORKERS = 8
+BACKBONE_Z_DIM = 4096
+BACKBONE_ENC_OUT_DIMS = {"tf_efficientdet_d0": 64, "tf_efficientdet_d1": 88}
 CONFIDENCE_THRESHOLD = 0.5
 EARLY_STOPPING = False
-VERSION = 0.2
+USE_BACKBONE = True
 
 # File paths
 RESULTS_DIR = Path("output")
 MODEL_DIR = RESULTS_DIR / Path("model")
+MODEL_NO_BARLOW_NAME = Path(f"effdet_{ARCHITECTURE_D0}_no_barlow_V{VERSION}.pth")
+MODEL_BARLOW_NAME = Path(f"effdet_{ARCHITECTURE_D0}_barlow_V{VERSION}.pth")
 MODEL_BACKUP_DIR = RESULTS_DIR / Path("model_backup")
+BACKBONE_NAME = Path(f"backbone_{ARCHITECTURE_D1}_V{VERSION}.pth")
+BACKBONE_FULL_PATH = MODEL_DIR / BACKBONE_NAME
+
 GRAPH_DIR = RESULTS_DIR / Path("graphs")
 IMG_DIR = RESULTS_DIR / Path("images")
-MODEL_NAME = Path(f"effdet_{ARCHITECTURE}_no_barlow_V{VERSION}.pth")
-MODEL_FULL_PATH = MODEL_DIR / MODEL_NAME
-MODEL_BACKUP_FULL_PATH = MODEL_BACKUP_DIR / MODEL_NAME
-LOSS_CURVE_FULL_PATH = GRAPH_DIR / Path("loss_curve.png")
-DETECTION_PERF_FULL_PATH = GRAPH_DIR / Path("detection_performance.png")
-F1_SCORE_FULL_PATH = GRAPH_DIR / Path("f1_score.png")
-CONFUSION_MATRIX_FULL_PATH = GRAPH_DIR / Path("confusion_matrix.png")
-MAP_FULL_PATH = GRAPH_DIR / Path("mAPs.png")
+LOSS_CURVE_FULL_PATH = GRAPH_DIR / Path(f"loss_curve_{VERSION}.png")
+DETECTION_PERF_FULL_PATH = GRAPH_DIR / Path(f"detection_performance_{VERSION}.png")
+F1_SCORE_FULL_PATH = GRAPH_DIR / Path(f"f1_score_{VERSION}.png")
+CONFUSION_MATRIX_FULL_PATH = GRAPH_DIR / Path(f"confusion_matrix_{VERSION}.png")
+MAP_FULL_PATH = GRAPH_DIR / Path(f"mAPs_{VERSION}.png")
 
 # Dataset constants
 DATASET = Path("data")
+MODEL = Path("effdet")
+BACKBONE = Path("backbone")
 TRAIN = Path("train")
 VALIDATION = Path("val")
 IMAGE = Path("images")

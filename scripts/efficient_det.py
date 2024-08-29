@@ -12,20 +12,19 @@ import tqdm
 
 # Custom files
 from utils.logger import _app_logger, _lightning_logger
-from efficient_det.pigs_dataset_adapter import PigsDatasetAdapter
+from efficient_det.pigs_dataset_adapter import PigsDatasetAdapterEffDet
 from efficient_det.effdet_data_module import EfficientDetDataModule
 from efficient_det.effdet_model import EfficientDetModel
 from efficient_det.loss_plot_callback import LossPlotCallback
+from barlow.pigs_dataset_adapter import PigsDatasetAdapterBackbone
+from barlow.barlow_data_module import BarlowTwinsDataModule
+from barlow.barlow_twins import BarlowTwins
+from barlow.barlow_transform import BarlowTwinsTransform
+from barlow.repr_net import ReprNet
 from utils.constants import *
 from utils.functions import *
 
 # ===================================== GLOBALS ===================================== #
-
-# Paths setup
-train_images_path = DATASET / TRAIN / IMAGE
-val_images_path = DATASET / VALIDATION / IMAGE
-train_anns_path = DATASET / TRAIN / ANNOTATION
-val_anns_path = DATASET / VALIDATION / ANNOTATION
 
 # Accelerator and devices
 def choose_accelerator_and_devices():
@@ -57,7 +56,94 @@ ACCELERATOR, DEVICES = choose_accelerator_and_devices()
 
 # ===================================== FUNCTIONS =====================================
 
-def train_efficient_det(num_sanity_val_steps=1):
+def train_efficient_net_backbone(num_sanity_val_steps=1):
+    # Create paths
+    train_images_path = DATASET / BACKBONE
+    val_images_path = DATASET / MODEL / VALIDATION / IMAGE
+
+    # Logging paths
+    _app_logger.debug(f"Training images path: {train_images_path}")
+    _app_logger.debug(f"Validation images path: {val_images_path}")
+
+    # Dataset setup
+    _app_logger.info("Setting up datasets...")
+    pigs_train_ds = PigsDatasetAdapterBackbone(train_images_path)
+    pigs_val_ds = PigsDatasetAdapterBackbone(val_images_path)
+    _app_logger.info("Datasets setup complete.")
+
+    # Model setup
+    _app_logger.info("Setting up image augmentation...")
+    train_transform = BarlowTwinsTransform(
+        train=True,
+        input_height=IMG_SIZE[0],
+        gaussian_blur=False,
+        jitter_strength=0.5,
+        normalize=imagenet_normalization(),
+    )
+    val_transform = BarlowTwinsTransform(
+        train=False,
+        input_height=IMG_SIZE[0],
+        gaussian_blur=False,
+        jitter_strength=0.5,
+        normalize=imagenet_normalization(),
+    )
+    _app_logger.info("Image augmentation setup complete.")
+
+    _app_logger.info("Setting up image augmentation...")
+    dm = BarlowTwinsDataModule(
+        train_dataset_adaptor=pigs_train_ds,
+        validation_dataset_adaptor=pigs_val_ds,
+        train_transforms=train_transform,
+        valid_transforms=val_transform,
+        num_workers=BACKBONE_NUM_WORKERS,
+        batch_size=BACKBONE_BATCH_SIZE,
+    )
+    _app_logger.info("Datasets and DataModule setup complete.")
+
+    _app_logger.info(f"Creating Barlow Twins model with architecture {ARCHITECTURE_D1}...")
+    encoder_out_dim = BACKBONE_ENC_OUT_DIMS[ARCHITECTURE_D1]
+    encoder = create_backbone_model(architecture=ARCHITECTURE_D1, image_size=IMG_SIZE[0])
+    model = BarlowTwins(
+        encoder=encoder,
+        encoder_out_dim=encoder_out_dim,
+        get_repr=ReprNet(config=get_efficientdet_config(ARCHITECTURE_D1)),
+        num_training_samples=len(pigs_train_ds),
+        batch_size=BACKBONE_BATCH_SIZE,
+        z_dim=BACKBONE_Z_DIM,
+    )
+    _app_logger.info("Model creation complete.")
+
+    # Trainer setup
+    _app_logger.info(f"Starting training for {BACKBONE_EPOCHS} epochs...")
+    logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
+    trainer = Trainer(
+        logger=_lightning_logger,
+        accelerator=ACCELERATOR,
+        devices=DEVICES,
+        max_epochs=BACKBONE_EPOCHS,
+        num_sanity_val_steps=num_sanity_val_steps,
+        accumulate_grad_batches=8,
+        log_every_n_steps=31
+    )
+    trainer.fit(model, dm)
+    _app_logger.info("Training complete.")
+
+    # Train the model
+    _app_logger.info(f"Starting training for {BACKBONE_EPOCHS} epochs...")
+    trainer.fit(model, dm)
+    _app_logger.info("Training complete.")
+
+    # Save the trained model weights
+    torch.save(model.state_dict(), BACKBONE_FULL_PATH)
+    _app_logger.info(f"Model saved to {BACKBONE_FULL_PATH}")
+
+def train_efficient_det(num_sanity_val_steps=1, use_backbone=True):
+    # Create paths
+    train_images_path = DATASET / MODEL / TRAIN / IMAGE
+    val_images_path = DATASET / MODEL / VALIDATION / IMAGE
+    train_anns_path = DATASET / MODEL / TRAIN / ANNOTATION
+    val_anns_path = DATASET / MODEL / VALIDATION / ANNOTATION
+
     # Logging paths
     _app_logger.debug(f"Training images path: {train_images_path}")
     _app_logger.debug(f"Validation images path: {val_images_path}")
@@ -66,24 +152,23 @@ def train_efficient_det(num_sanity_val_steps=1):
 
     # Dataset setup
     _app_logger.info("Setting up datasets...")
-    pigs_train_ds = PigsDatasetAdapter(train_images_path, train_anns_path)
-    pigs_val_ds = PigsDatasetAdapter(val_images_path, val_anns_path)
+    pigs_train_ds = PigsDatasetAdapterEffDet(train_images_path, train_anns_path)
+    pigs_val_ds = PigsDatasetAdapterEffDet(val_images_path, val_anns_path)
     
     dm = EfficientDetDataModule(
         train_dataset_adaptor=pigs_train_ds,
         validation_dataset_adaptor=pigs_val_ds,
         num_workers=4,
-        batch_size=BATCH_SIZE,
+        batch_size=MODEL_BATCH_SIZE,
     )
-
     _app_logger.info("Datasets and DataModule setup complete.")
 
     # Model setup
-    _app_logger.info(f"Creating EfficientDet model with architecture {ARCHITECTURE}...")
+    _app_logger.info(f"Creating EfficientDet model with architecture {ARCHITECTURE_D1}...")
     model = EfficientDetModel(
         num_classes=1,
         img_size=IMG_SIZE[0],
-        model_architecture=ARCHITECTURE,
+        model_architecture=ARCHITECTURE_D1,
         iou_threshold=0.44,
         prediction_confidence_threshold=CONFIDENCE_THRESHOLD,
         sigma=0.8,
@@ -92,7 +177,7 @@ def train_efficient_det(num_sanity_val_steps=1):
     _app_logger.info("Model creation complete.")
 
     # Trainer setup
-    _app_logger.info(f"Starting training for {EPOCHS} epochs...")
+    _app_logger.info(f"Starting training for {MODEL_EPOCHS} epochs...")
     callbacks = [LossPlotCallback()]
     # If early stopping in callback list, log it
     if EARLY_STOPPING:
@@ -103,15 +188,20 @@ def train_efficient_det(num_sanity_val_steps=1):
         logger=_lightning_logger,
         accelerator=ACCELERATOR,
         devices=DEVICES,
-        max_epochs=EPOCHS,
+        max_epochs=MODEL_EPOCHS,
         num_sanity_val_steps=num_sanity_val_steps,
         accumulate_grad_batches=3,
         log_every_n_steps=31,
-        callbacks=[LossPlotCallback()],
+        callbacks=callbacks
     )
     trainer.fit(model, dm)
     _app_logger.info("Training complete.")
 
+    MODEL_FULL_PATH = ""
+    if use_backbone:
+        MODEL_FULL_PATH = MODEL_DIR / MODEL_BARLOW_NAME
+    else:
+        MODEL_FULL_PATH = MODEL_DIR / MODEL_NO_BARLOW_NAME
     # Saving model
     torch.save(
         model.state_dict(),
@@ -119,27 +209,38 @@ def train_efficient_det(num_sanity_val_steps=1):
     )
     _app_logger.info(f"Model saved to {MODEL_FULL_PATH}")
 
-def validate_efficient_det(num_sanity_val_steps=1):
+def validate_efficient_det(num_sanity_val_steps=1, use_backbone=True):
+    # Create paths
+    train_images_path = DATASET / MODEL / TRAIN / IMAGE
+    val_images_path = DATASET / MODEL / VALIDATION / IMAGE
+    train_anns_path = DATASET / MODEL / TRAIN / ANNOTATION
+    val_anns_path = DATASET / MODEL / VALIDATION / ANNOTATION
+
+    MODEL_FULL_PATH = ""
+    if use_backbone:
+        MODEL_FULL_PATH = MODEL_DIR / MODEL_BARLOW_NAME
+    else:
+        MODEL_FULL_PATH = MODEL_DIR / MODEL_NO_BARLOW_NAME
     if not os.path.exists(MODEL_FULL_PATH):
         _app_logger.error(f"Model file not found at {MODEL_FULL_PATH}. Validation aborted.")
         return
 
     _app_logger.info(f"Loading model from {MODEL_FULL_PATH} for validation.")
 
-    pigs_train_ds = PigsDatasetAdapter(train_images_path, train_anns_path)
-    pigs_val_ds = PigsDatasetAdapter(val_images_path, val_anns_path)
+    pigs_train_ds = PigsDatasetAdapterEffDet(train_images_path, train_anns_path)
+    pigs_val_ds = PigsDatasetAdapterEffDet(val_images_path, val_anns_path)
 
     dm = EfficientDetDataModule(
         train_dataset_adaptor=pigs_train_ds,
         validation_dataset_adaptor=pigs_val_ds,
         num_workers=4,
-        batch_size=BATCH_SIZE,
+        batch_size=MODEL_BATCH_SIZE,
     )
 
     model = EfficientDetModel(
         num_classes=1,
         img_size=IMG_SIZE[0],
-        model_architecture=ARCHITECTURE,
+        model_architecture=ARCHITECTURE_D1,
         iou_threshold=0.8,
         prediction_confidence_threshold=CONFIDENCE_THRESHOLD,
         sigma=0.8,
@@ -151,7 +252,7 @@ def validate_efficient_det(num_sanity_val_steps=1):
     all_truths = []
     all_predictions = []
 
-    for i in tqdm.tqdm(range(len(pigs_val_ds) - 230), desc="Validating model", unit="image"):
+    for i in tqdm.tqdm(range(len(pigs_val_ds)), desc="Validating model", unit="image"):
         image, truth_bboxes, _, _ = pigs_val_ds.get_image_and_labels_by_idx(i)
         all_truths.append(truth_bboxes.tolist())
 
