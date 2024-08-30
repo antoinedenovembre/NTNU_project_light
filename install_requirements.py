@@ -21,6 +21,7 @@ libraries = [
     'Pillow',
     'pycocotools',
     'pytorch-lightning',
+    'rich',
     'tensorboard',
     'timm',
     'torch',
@@ -31,6 +32,20 @@ libraries = [
     'seaborn'
 ]
 
+def check_tqdm():
+    try:
+        import tqdm
+        if tqdm.__version__ < "4.61.0":
+            print("Updating tqdm...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "tqdm>=4.61.0"],
+                                  stdout=subprocess.DEVNULL,  # Redirect stdout
+                                  stderr=subprocess.DEVNULL)  # Redirect stderr
+    except ImportError:
+        print("Installing tqdm...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "tqdm"],
+                              stdout=subprocess.DEVNULL,  # Redirect stdout
+                              stderr=subprocess.DEVNULL)  # Redirect stderr
+
 def install_libraries():
     for lib in tqdm(libraries, desc="Installing libraries", unit="package"):
         subprocess.check_call([sys.executable, "-m", "pip", "install", lib],
@@ -38,5 +53,6 @@ def install_libraries():
                               stderr=subprocess.DEVNULL)  # Redirect stderr
 
 print("Installing required libraries...")
+check_tqdm()
 install_libraries()
 print("Done!")

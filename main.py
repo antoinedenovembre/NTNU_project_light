@@ -8,8 +8,8 @@ warnings.filterwarnings("ignore", category=UserWarning) # Suppress UserWarnings
 
 # Custom files
 from utils.logger import _app_logger
-from scripts.efficient_det import train_efficient_det, validate_efficient_det, train_efficient_net_backbone
-from utils.functions import backup_model
+from scripts.efficient_det import train_efficient_det, evaluate_efficient_det, train_efficient_net_backbone
+from utils.functions import backup_models, print_title, print_option
 
 # =================================== FUNCTIONS =================================== #
 
@@ -28,12 +28,17 @@ def main():
 
 	# Main menu
 	while True:
-		print("========== Main Menu ==========")
-		print("1. Train EfficientDet model")
-		print("2. Validate EfficientDet model")
-		print("3. Train EfficientNet backbone")
-		print("4. Backup model")
-		print("0. Exit")
+		# Clear terminal before printing menu
+		os.system('cls' if os.name == 'nt' else 'clear')
+
+		print_title("======================================= Main Menu =======================================")
+		print()
+		print_option("1. Train EfficientDet model")
+		print_option("2. Evaluate EfficientDet model")
+		print_option("3. Train EfficientNet backbone")
+		print_option("4. Backup models in model directory")
+		print_option("0. Exit")
+		print()
 
 		choice = input("Enter your choice (0-4): ")
 		use_backbone = False
@@ -46,17 +51,16 @@ def main():
 
 		if choice == "1":
 			_app_logger.info("Training EfficientDet model...")
-			train_efficient_net_backbone(num_sanity_val_steps=1)
 			train_efficient_det(num_sanity_val_steps=1, use_backbone=backbone_choice)
 		elif choice == "2":
-			_app_logger.info("Validating EfficientDet model...")
-			validate_efficient_det(num_sanity_val_steps=1)
+			_app_logger.info("Evaluating EfficientDet model...")
+			evaluate_efficient_det(num_sanity_val_steps=1)
 		elif choice == "3":
 			_app_logger.info("Training EfficientNet backbone...")
 			train_efficient_net_backbone(num_sanity_val_steps=1)
 		elif choice == "4":
-			_app_logger.info("Backing up model...")
-			backup_model()
+			_app_logger.info("Backing up models in model directory...")
+			backup_models()
 		elif choice == "0":
 			break
 		else:

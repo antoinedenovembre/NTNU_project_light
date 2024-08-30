@@ -209,7 +209,7 @@ def train_efficient_det(num_sanity_val_steps=1, use_backbone=True):
     )
     _app_logger.info(f"Model saved to {MODEL_FULL_PATH}")
 
-def validate_efficient_det(num_sanity_val_steps=1):
+def evaluate_efficient_det(num_sanity_val_steps=1):
     # Create paths
     train_images_path = DATASET / MODEL / TRAIN / IMAGE
     val_images_path = DATASET / MODEL / VALIDATION / IMAGE
@@ -219,8 +219,15 @@ def validate_efficient_det(num_sanity_val_steps=1):
     MODEL_FULL_PATH = ""
     models_available = scan_models_in_output()
     # Ask user to choose a model to validate
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+    print_title("======================================= Model evaluation =======================================")
+    print()
+
     for i, model in enumerate(models_available):
-        print(f"{i}. {model}")
+        print_option(f"{i}. {model}")
+    
+    print()
     model_choice = int(input("Enter the model number to validate: "))
     MODEL_FULL_PATH = models_available[model_choice]
 

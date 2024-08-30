@@ -19,6 +19,9 @@ import shutil
 from functools import partial
 import torchvision.transforms as transforms
 import torch
+from rich.console import Console
+from rich.text import Text
+from rich.align import Align
 
 # Custom files
 from utils.constants import *
@@ -538,7 +541,7 @@ def get_all_metrics(predictions, ground_truths, iou_thresholds=np.linspace(0.01,
     tp, fp, fn = compute_confusion_matrix(predictions, ground_truths)
     plot_confusion_matrix(tp, fp, fn)
 
-def backup_model():
+def backup_models():
     if MODEL_DIR.exists():
         # Copy each file recursively to the backup directory
         shutil.copytree(MODEL_DIR, MODEL_BACKUP_DIR)
@@ -548,3 +551,17 @@ def scan_models_in_output():
     # Get all the models in the output directory
     models = [model for model in MODEL_DIR.iterdir() if model.is_file() and "backbone" not in model.name]
     return models
+
+console = Console()
+
+def print_centered(text):
+    centered_text = Align.center(text, vertical="middle")
+    console.print(centered_text, justify="center")
+
+def print_title(text):
+    title = Text(text, style="bold underline white")
+    print_centered(title)
+
+def print_option(text):
+    italic_text = Text(text, style="italic white")
+    print_centered(italic_text)
