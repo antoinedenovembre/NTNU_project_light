@@ -16,6 +16,9 @@ import matplotlib.pyplot as plt
 import albumentations as A
 import seaborn as sns
 import shutil
+from functools import partial
+import torchvision.transforms as transforms
+import torch
 
 # Custom files
 from utils.constants import *
@@ -93,17 +96,29 @@ def show_image(
 
     plt.show()
 
-def create_model(num_classes=1, image_size=512, architecture="tf_efficientnetv2_l"):
-    # efficientdet_model_param_dict["tf_efficientnetv2_l"] = dict(
-    #     name="tf_efficientnetv2_l",
-    #     backbone_name="tf_efficientnetv2_l",
-    #     backbone_args=dict(drop_path_rate=0.2),
-    #     num_classes=num_classes,
-    #     url="",
-    # )
-
+def create_model(num_classes=1, image_size=512, architecture="tf_efficientnetv2_l", use_backbone=False):
     config = get_efficientdet_config(architecture)
     config.update({"num_classes": num_classes})
+    config.update({"image_size": (image_size, image_size)})
+
+    _app_logger.debug(config)
+
+    net = EfficientDet(config, pretrained_backbone=use_backbone)
+    net.class_net = nn.Identity()
+    net.box_net = nn.Identity()
+    net.class_net = HeadNet(config, num_outputs=config.num_classes)
+    net.box_net = HeadNet(config, num_outputs=4)
+    if use_backbone and BACKBONE_FULL_PATH.exists():
+        state_dict = torch.load(BACKBONE_FULL_PATH)
+        updated_state_dict = {key.replace("encoder.", ""): value for key, value in state_dict.items()}
+        net.load_state_dict(
+            updated_state_dict
+        )
+
+    return DetBenchTrain(net, config)
+
+def create_backbone_model(image_size=512, architecture="tf_efficientnetv2_l"):
+    config = get_efficientdet_config(architecture)
     config.update({"image_size": (image_size, image_size)})
 
     _app_logger.debug(config)
@@ -111,12 +126,8 @@ def create_model(num_classes=1, image_size=512, architecture="tf_efficientnetv2_
     net = EfficientDet(config, pretrained_backbone=False)
     net.class_net = nn.Identity()
     net.box_net = nn.Identity()
-    # net.load_state_dict(
-    #     torch.load("results/weights/barlow_pretrained_weights_backbone")
-    # )
-    net.class_net = HeadNet(config, num_outputs=config.num_classes)
-    net.box_net = HeadNet(config, num_outputs=4)
-    return DetBenchTrain(net, config)
+
+    return net
 
 def get_train_transforms(target_img_size=512):
     return A.Compose(
@@ -194,6 +205,23 @@ def run_soft_nms(predictions, iou_thr=0.44, skip_box_thr=0.12, sigma=0.5):
         class_labels.append(labels[idxs_out].tolist())
 
     return bboxes, confidences, class_labels
+
+def fn(warmup_steps, step):
+    if step < warmup_steps:
+        return float(step) / float(max(1, warmup_steps))
+    else:
+        return 1.0
+
+def linear_warmup_decay(warmup_steps):
+    return partial(fn, warmup_steps)
+
+def imagenet_normalization():
+    normalize = transforms.Normalize(
+        mean=[x / 255.0 for x in [0.485, 0.456, 0.406]],
+        std=[x / 255.0 for x in [0.229, 0.224, 0.225]],
+    )
+    
+    return normalize
 
 def show_bboxes_on_image(
     image,
@@ -511,6 +539,12 @@ def get_all_metrics(predictions, ground_truths, iou_thresholds=np.linspace(0.01,
     plot_confusion_matrix(tp, fp, fn)
 
 def backup_model():
-    if MODEL_FULL_PATH.exists():
-        shutil.copy(MODEL_FULL_PATH, MODEL_BACKUP_FULL_PATH)
-        _app_logger.info(f"Model backed up to {MODEL_BACKUP_FULL_PATH}")
+    if MODEL_DIR.exists():
+        # Copy each file recursively to the backup directory
+        shutil.copytree(MODEL_DIR, MODEL_BACKUP_DIR)
+        _app_logger.info(f"Model backed up to {MODEL_BACKUP_DIR}")
+
+def scan_models_in_output():
+    # Get all the models in the output directory
+    models = [model for model in MODEL_DIR.iterdir() if model.is_file() and "backbone" not in model.name]
+    return models

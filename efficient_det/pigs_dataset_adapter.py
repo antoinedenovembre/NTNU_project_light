@@ -12,7 +12,7 @@ from utils.logger import _app_logger
 
 # ===================================== CLASS ===================================== #
 
-class PigsDatasetAdapter:
+class PigsDatasetAdapterEffDet:
     def __init__(self, images_path, anns_path):
         self.images_path = images_path
         self.anns_path = anns_path

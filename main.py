@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore", category=UserWarning) # Suppress UserWarnings
 
 # Custom files
 from utils.logger import _app_logger
-from scripts.efficient_det import train_efficient_det, validate_efficient_det
+from scripts.efficient_det import train_efficient_det, validate_efficient_det, train_efficient_net_backbone
 from utils.functions import backup_model
 
 # =================================== FUNCTIONS =================================== #
@@ -31,19 +31,30 @@ def main():
 		print("========== Main Menu ==========")
 		print("1. Train EfficientDet model")
 		print("2. Validate EfficientDet model")
-		print("3. Backup model")
+		print("3. Train EfficientNet backbone")
+		print("4. Backup model")
 		print("0. Exit")
 
-		choice = input("Enter your choice (0-3): ")
+		choice = input("Enter your choice (0-4): ")
+		use_backbone = False
+		if choice == "1":
+			use_backbone = input("Use backbone? (y/n): ")
+			backbone_choice = (use_backbone == "y")
+			_app_logger.info(f"Using backbone: {backbone_choice}")
+
+		_app_logger.info(f"Choice: {choice}")
 
 		if choice == "1":
 			_app_logger.info("Training EfficientDet model...")
-			train_efficient_det(num_sanity_val_steps=1)
-			validate_efficient_det(num_sanity_val_steps=1)
+			train_efficient_net_backbone(num_sanity_val_steps=1)
+			train_efficient_det(num_sanity_val_steps=1, use_backbone=backbone_choice)
 		elif choice == "2":
 			_app_logger.info("Validating EfficientDet model...")
-			validate_efficient_det(num_sanity_val_steps=0)
+			validate_efficient_det(num_sanity_val_steps=1)
 		elif choice == "3":
+			_app_logger.info("Training EfficientNet backbone...")
+			train_efficient_net_backbone(num_sanity_val_steps=1)
+		elif choice == "4":
 			_app_logger.info("Backing up model...")
 			backup_model()
 		elif choice == "0":
