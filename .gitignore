@@ -9,15 +9,12 @@
 logs/
 
 # Outputs
-output/
 
 # Except folders that contain models
-!output/model
-!output/model_backup
+output/images
+output/graphs_no_barlow
+output/graphs_barlow
+output/model_backup
 
 # Input data
 data/
-
-# tmp
-vince/
-lightning_logs/

@@ -544,8 +544,21 @@ def get_all_metrics(predictions, ground_truths, iou_thresholds=np.linspace(0.01,
 def backup_models():
     if MODEL_DIR.exists():
         # Copy each file recursively to the backup directory
-        shutil.copytree(MODEL_DIR, MODEL_BACKUP_DIR)
-        _app_logger.info(f"Model backed up to {MODEL_BACKUP_DIR}")
+        for model in MODEL_DIR.iterdir():
+            if model.is_file():
+                shutil.copy(model, MODEL_BACKUP_DIR)
+        _app_logger.info(f"Model directory backed up to {MODEL_BACKUP_DIR}")
+    
+    # Then remove each file from MODEL_DIR except the latest versions of backbone_*.pth and effdet_*.pth (version is at the end of the filename)
+    CURRENT_VERSION = VERSION
+    for model in MODEL_DIR.iterdir():
+        if model.is_file():
+            if "backbone" in model.name:
+                if f"V{CURRENT_VERSION}" not in model.name:
+                    model.unlink()
+            else:
+                if f"V{CURRENT_VERSION}" not in model.name:
+                    model.unlink()
 
 def scan_models_in_output():
     # Get all the models in the output directory
