@@ -27,18 +27,11 @@ class LossPlotCallback(pl.Callback):
         if avg_val_loss is not None:
             self.val_losses.append(avg_val_loss.item())
 
-        # Plot the training and validation loss curves after each validation epoch
-        plt.figure(figsize=(10, 5))
-        if self.train_losses:
-            plt.plot(self.train_losses, label='Train Loss')
-        if self.val_losses:
-            plt.plot(self.val_losses, label='Validation Loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Loss Curve')
-        plt.legend()
-
     def on_train_end(self, trainer, pl_module):
+        # Get rid of the first value because it does not have the feedback yet from the validation set
+        self.train_losses = self.train_losses[1:]
+        self.val_losses = self.val_losses[1:]
+        
         # Plot the training and validation loss curves at the end of training
         plt.figure(figsize=(10, 5))
         if self.train_losses:
@@ -50,7 +43,7 @@ class LossPlotCallback(pl.Callback):
         plt.title('Loss Curve')
         plt.legend()
         plt.xlim(0, len(self.train_losses))
-        plt.ylim(0, max(max(self.train_losses), max(self.val_losses)))
+        plt.ylim(0, 3)
         
         # Save the plot
         plt.savefig(LOSS_CURVE_FULL_PATH)

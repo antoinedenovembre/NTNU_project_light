@@ -100,13 +100,13 @@ def train_efficient_net_backbone(num_sanity_val_steps=1):
     )
     _app_logger.info("Datasets and DataModule setup complete.")
 
-    _app_logger.info(f"Creating Barlow Twins model with architecture {ARCHITECTURE_D1}...")
-    encoder_out_dim = BACKBONE_ENC_OUT_DIMS[ARCHITECTURE_D1]
-    encoder = create_backbone_model(architecture=ARCHITECTURE_D1, image_size=IMG_SIZE[0])
+    _app_logger.info(f"Creating Barlow Twins model with architecture {CHOSEN_ARCHITECTURE}...")
+    encoder_out_dim = BACKBONE_ENC_OUT_DIMS[CHOSEN_ARCHITECTURE]
+    encoder = create_backbone_model(architecture=CHOSEN_ARCHITECTURE, image_size=IMG_SIZE[0])
     model = BarlowTwins(
         encoder=encoder,
         encoder_out_dim=encoder_out_dim,
-        get_repr=ReprNet(config=get_efficientdet_config(ARCHITECTURE_D1)),
+        get_repr=ReprNet(config=get_efficientdet_config(CHOSEN_ARCHITECTURE)),
         num_training_samples=len(pigs_train_ds),
         batch_size=BACKBONE_BATCH_SIZE,
         z_dim=BACKBONE_Z_DIM,
@@ -164,11 +164,11 @@ def train_efficient_det(num_sanity_val_steps=1, use_backbone=True):
     _app_logger.info("Datasets and DataModule setup complete.")
 
     # Model setup
-    _app_logger.info(f"Creating EfficientDet model with architecture {ARCHITECTURE_D1}...")
+    _app_logger.info(f"Creating EfficientDet model with architecture {CHOSEN_ARCHITECTURE}...")
     model = EfficientDetModel(
         num_classes=1,
         img_size=IMG_SIZE[0],
-        model_architecture=ARCHITECTURE_D1,
+        model_architecture=CHOSEN_ARCHITECTURE,
         iou_threshold=0.44,
         prediction_confidence_threshold=CONFIDENCE_THRESHOLD,
         sigma=0.8,
@@ -250,7 +250,7 @@ def evaluate_efficient_det(num_sanity_val_steps=1):
     model = EfficientDetModel(
         num_classes=1,
         img_size=IMG_SIZE[0],
-        model_architecture=ARCHITECTURE_D1,
+        model_architecture=CHOSEN_ARCHITECTURE,
         iou_threshold=0.8,
         prediction_confidence_threshold=CONFIDENCE_THRESHOLD,
         sigma=0.8,
