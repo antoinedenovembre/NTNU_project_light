@@ -12,12 +12,15 @@ Deep learning project about animal behaviour.
 
 For now, the project includes:
 
-- EfficientDet model training and saving
-- EfficientDet evaluation (including metrics and image testing)
+- EfficientDet model (no backbone) training and saving
+- EfficientDet model (no backbone) evaluation (including metrics and image testing)
+- EfficientNet backbone training and saving
+- EfficientDet with EfficientNet backbone training and saving
+- EfficientDet with EfficientNet backbone evaluation (including metrics and image testing)
 
 ## Prerequisites
 
-Before you begin, ensure you have met the following requirements:
+Before you begin, ensure you have met the following requirement:
 
 - Python 3.10+
 
@@ -39,27 +42,62 @@ NTNU_project_light
 │   install_requirements.py
 │
 └───data
-│   └───train
-│   │   │   annotations
-│   │   │   │   train.json
-│   │   │ 
-│   │   │   images
-│   │   │   │   image1.jpg/png/...
-│   │   │   │   ...
+│   └───backbone
+│   │   │   image1.jpg/png/...
+│   │   │   ...
 │   │
-│   └───val
-│       │   annotations
-│       │   │   val.json
+│   └───effdet
+│       └─── train
+│       │    └─── annotations
+│       │    │    │   annotations.json
+│       │    │    │   ...
+│       │    │
+│       │    └─── images
+│       │         │   image1.jpg/png/...
+│       │         │   ...
 │       │
-│       │   images
-│           │   image1.jpg/png/...
-│           │   ...
+│       └─── test
+│            └─── annotations
+│            │    │   annotations.json
+│            │    │   ...
+│            │
+│            └─── images
+│                 │   image1.jpg/png/...
+│                 │   ...
 │
 └───efficient_det
+│
+└───barlow
 │
 └───utils
 │
 └───scripts
+│
+└───documentation
+│
+└───output
+```
+
+The annotations shall have the following structure
+```
+{
+  "annotations": [
+    {
+      "area": 87292,
+      "bbox": [
+        576,
+        98,
+        547,
+        204
+      ],
+      "category_id": 6,
+      "id": 1, <!-- Should be the number of the annotation -->
+      "image_id": 2, <!-- Should be the number of the image -->
+      "iscrowd": 0
+    },
+    ...
+    ]
+}
 ```
 
 ## Usage
@@ -72,7 +110,11 @@ python main.py
 
 ## Documentation
 
-[Documentation - Paper by Fayaz Rahman](documentation/paper.pdf)
+Overall view of the project:
+[Documentation - Overall view](documentation/paper.pdf)
+
+Technical documentation about evaluation metrics and loss function:
+[Documentation - Metrics](documentation/metrics.md)
 
 ## Q&As
 
