@@ -93,5 +93,6 @@ This repository is a fork from [this repository](https://github.com/FayazRahman/
 Show your appreciation to those who have contributed to the project.
 
 - [@FayazRahman](https://github.com/FayazRahman) - Contribution
+- Dev Narayan Chakkalakkal Binu - Contribution
 - [@antoinedenovembre](https://github.com/antoinedenovembre) - Contribution
 
