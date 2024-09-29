@@ -29,7 +29,7 @@ def main():
 	# Main menu
 	while True:
 		# Clear terminal before printing menu
-		os.system('cls' if os.name == 'nt' else 'clear')
+		# os.system('cls' if os.name == 'nt' else 'clear')
 
 		print_title("======================================= Main Menu =======================================")
 		print()
